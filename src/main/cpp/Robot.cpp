@@ -29,6 +29,10 @@
 #include "networktables/NetworkTable.h"
 #include "networktables/NetworkTableInstance.h"
 
+//setting slow and fast speeds
+double speedFast = .7;
+double speedSlow = .45;
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////DEADBAND FUNCTION/////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +70,8 @@ class Robot : public frc::TimedRobot {
   int lkPIDLoopIdx = 0;
   int rkPIDLoopIdx = 0;
 
-  double driveSpeed=0.6;
+  double driveSpeed=speedFast;
+  double turn;
 
 
 
@@ -79,7 +84,7 @@ class Robot : public frc::TimedRobot {
   //1 is turn
   //2 is check turn
   //3 is unload
-  double turningSpeed=0.4;
+  double turningSpeed=0.35;
   int maxmoves=3;
   double moves[20][3] = {
   {3, 0, 0}, 
@@ -192,8 +197,8 @@ bool shootBallsShort=false;
   bool targetSeek=false;
   bool finetargetSeek=false;
   std::shared_ptr<NetworkTable> table;
-  double targetSpeed=0.325;
-  double finetargetSpeed=0.290;
+  double targetSpeed=0.4;
+  double finetargetSpeed=0.35;
   int targetfoundCounter=0;
   double currentAngle;
   double startAngle;
@@ -274,13 +279,15 @@ bool shootBallsShort=false;
 //////////////////////////////////////////////////////////////////////////////////////////////
   void TeleopPeriodic() { 
 
-    m_robotDrive->ArcadeDrive(-driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand)), driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand)));
+    turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
+
+    m_robotDrive->ArcadeDrive(-driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand)), turn);
     gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
     if (driver.GetBumperPressed(frc::GenericHID::JoystickHand::kRightHand)) {
       driveSpeed = 1.0;
     }
     if (driver.GetBumperReleased(frc::GenericHID::JoystickHand::kRightHand)) {
-      driveSpeed = 0.6;
+      driveSpeed = speedFast;
     }
 
 
@@ -477,11 +484,11 @@ if (copilot.GetYButtonPressed()) {
     if (driver.GetXButtonPressed()) {
 std::cout << " DRIVER X BUTTON\n";
 
-      if (driveSpeed == 0.6) {
-        driveSpeed = 0.35;
+      if (driveSpeed == 0.7) {
+        driveSpeed = speedSlow;
       }
       else {
-        driveSpeed = 0.6;
+        driveSpeed = speedFast;
       }
       /*
       std::cout << "Left motor " << (m_leftMotor1a->GetSelectedSensorPosition()) << "\n";
@@ -541,17 +548,21 @@ std::cout << " DRIVER X BUTTON\n";
    }
 
 
-  if (driver.GetBumperPressed(frc::GenericHID::JoystickHand::kLeftHand)) {
+  if (driver.GetBumperPressed(frc::GenericHID::JoystickHand::kRightHand)) {
+    targetSeek = false;
+    finetargetSeek = false;
+  }
+  if ((driver.GetBumperPressed(frc::GenericHID::JoystickHand::kLeftHand)) && false) {
     // Get limelight table for reading tracking data
-    std::cout << "LEFT BUMPER PRESSED\n";
+    wpi::outs() << "LEFT BUMPER PRESSED\n";
   //  std::shared_ptr<NetworkTable> table = NetworkTable::GetTable("limelight");
     //std::shared_ptr<NetworkTable> table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
     targetX = table->GetNumber("tx", 0);
     targetY = table->GetNumber("ty", 0);
     targetA = table->GetNumber("ta", 0);
-    std::cout << "target X is  " << targetX << "\n";
-    std::cout << "target Y is  " << targetY << "\n";
-    std::cout << "target A is  " << targetA << "\n";
+    wpi::outs() << "target X is  " << targetX << "\n";
+    wpi::outs() << "target Y is  " << targetY << "\n";
+    wpi::outs() << "target A is  " << targetA << "\n";
     startAngle = gyro.GetAngle();
     targetSeek=true;
   }
@@ -578,7 +589,6 @@ std::cout << " DRIVER X BUTTON\n";
       finetargetSeek=true;
     }
 std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
-    m_robotDrive->ArcadeDrive(0, speed);
     }
 
   if (finetargetSeek){
@@ -586,6 +596,8 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
     targetX = table->GetNumber("tx", 0);
     targetY = table->GetNumber("ty", 0);
     targetA = table->GetNumber("ta", 0);
+    std::cout << targetX;
+    std::cout << targetY;
     angle = targetX;
     if(angle > 0.35)
 		  speed = finetargetSpeed;
@@ -600,7 +612,6 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
       }
     }
     std::cout << "IN FINE TARGET SEEK X IS " << speed << " " << angle << "\n";
-    m_robotDrive->ArcadeDrive(0, speed);
     }
 
 
@@ -647,7 +658,7 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
       }
       if ((SBtimer.Get() <10)&&(SBtimer.Get() > 2.0)) { 
         m_lift.Set(-0.2);
-        m_feeder.Set(ControlMode::PercentOutput, -0.5);      
+        m_feeder.Set(ControlMode::PercentOutput, -0.5);
       }
       if (SBtimer.Get() > 10.0){
         m_shooter.Set(0);

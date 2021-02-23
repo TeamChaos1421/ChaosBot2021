@@ -346,11 +346,31 @@ bool shootBallsShort=false;
          srx.Set(ControlMode::PercentOutput, 0.0);
        }
     }
-if (copilot.GetBumper(frc::GenericHID::JoystickHand::kRightHand) && true) {
-    srx.Set(ControlMode::PercentOutput, 0.15);
+if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand) && true) {
+    m_shooter.Set(0.72);
+    // srx.Set(ControlMode::PercentOutput, 0.15);
 }
-if (copilot.GetBumperReleased(frc::GenericHID::JoystickHand::kRightHand) && true) {
-    srx.Set(ControlMode::PercentOutput, 0.0);
+if (copilot.GetBumperReleased(frc::GenericHID::JoystickHand::kLeftHand) && true) {
+    m_shooter.Set(0.0);
+    // srx.Set(ControlMode::PercentOutput, 0.0);
+}
+
+if (copilot.GetYButton() && true) {
+    m_lift.Set(0.5);
+    // srx.Set(ControlMode::PercentOutput, 0.15);
+}
+if (copilot.GetYButtonReleased() && true) {
+    m_lift.Set(0.0);
+    // srx.Set(ControlMode::PercentOutput, 0.0);
+}
+
+if (copilot.GetXButton() && true) {
+    m_lift.Set(-0.75);
+    // srx.Set(ControlMode::PercentOutput, 0.15);
+}
+if (copilot.GetXButtonReleased() && true) {
+    m_lift.Set(0.0);
+    // srx.Set(ControlMode::PercentOutput, 0.0);
 }
 
 
@@ -457,14 +477,14 @@ if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand)&& true) {
   
 
 
-if (copilot.GetXButton()) {
+if ((copilot.GetXButton() & false)) {
     //shootBalls();
     SBtimer.Reset();
   	SBtimer.Start();
     shootBallsShort=true;
 }
 
-if (copilot.GetYButtonPressed()) {
+if ((copilot.GetYButtonPressed() & false)) {
   //shootBallsClose();
     SBtimer.Reset();
   	SBtimer.Start();
@@ -535,7 +555,7 @@ std::cout << " DRIVER X BUTTON\n";
      
    }
    if (driver.GetAButtonPressed()){
-          if (camServo->GetPosition() == 0.75){
+          if (camServo->GetPosition() == 0.7){
        camServo->Set(0.5);
      }
 
@@ -543,7 +563,7 @@ std::cout << " DRIVER X BUTTON\n";
        camServo->Set(0.3);
      }
      else{
-       camServo->Set(0.75);
+       camServo->Set(0.7);
      }
    }
 
@@ -653,12 +673,12 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
         m_lift.Set(0.5);
       }
       if ((SBtimer.Get() < 2.0)&&(SBtimer.Get() > 0.25)){
-        m_shooter.Set(0.77);
+        m_shooter.Set(0.6);
         m_lift.Set(0.0);
       }
       if ((SBtimer.Get() <10)&&(SBtimer.Get() > 2.0)) { 
         m_lift.Set(-0.2);
-        m_feeder.Set(ControlMode::PercentOutput, -0.5);
+        m_feeder.Set(ControlMode::PercentOutput, -0.4);
       }
       if (SBtimer.Get() > 10.0){
         m_shooter.Set(0);
@@ -674,14 +694,14 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
         m_lift.Set(0.5);
       }
       if ((SBtimer.Get() < 2.0)&&(SBtimer.Get() > 0.25)){
-        m_shooter.Set(0.70);
+        m_shooter.Set(0.7);
         m_lift.Set(0.0);
       }
       if ((SBtimer.Get() <6)&&(SBtimer.Get() > 2.0)) { 
-        m_lift.Set(-0.5);
-        m_feeder.Set(ControlMode::PercentOutput, -0.5);      
+        m_lift.Set(-0.4);
+        m_feeder.Set(ControlMode::PercentOutput, -0.3);      
       }
-      if (SBtimer.Get() > 6){
+      if (SBtimer.Get() > 7){
         m_shooter.Set(0);
         m_lift.Set(0);
         m_feeder.Set(ControlMode::PercentOutput, 0);

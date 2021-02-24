@@ -6,9 +6,12 @@
   float targetY;
   float targetA;
   std::shared_ptr<NetworkTable> table;
-  double targetSpeed=0.4;
-  double fineTargetSpeed=0.35;
-  int targetfoundCounter=0;
+  
+//Constants
+  double targetSpeed = 0.4;
+  double fineTargetSpeed = 0.3;
+  double errorCoarse = 1.5;
+  double errorFine = 0.5;
   
   table = nt::NetworkTableInstance::GetDefault().GetTable("limelight");
 
@@ -22,19 +25,19 @@ int limeLight() {
     wpi::outs() << "target Y is  " << targetY << "\n";
     wpi::outs() << "target A is  " << targetA << "\n";
 	
-	if (targetX > 1) {
+	if (targetX > errorCoarse) {
 		turn = targetSpeed;
 	}
-	else if (targetX < -1.0) {
+	else if (targetX < -(errorCoarse)) {
 		turn = -(targetSpeed);
 	}
-	else if (targetX > 0.5) {
+	else if (targetX > errorFine) {
 		turn = fineTargetSpeed;
 	}
-	else if (targetX < -0.5) {
+	else if (targetX < -(errorFine)) {
 		turn = -(fineTargetSpeed);
 	}
-	//else if ((targetX < 0.5) & (targetX > -0.5)) {
+	//else if ((targetX < errorFine) & (targetX > -(errorFine))) {
 		//turn = 0;
 	//}
 	else {

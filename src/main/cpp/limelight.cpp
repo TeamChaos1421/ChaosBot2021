@@ -25,11 +25,11 @@ int limeLight() {
 	if (targetX > 1) {
 		turn = targetSpeed;
 	}
-	else if (targetX > 0.5) {
-		turn = fineTargetSpeed;
-	}
 	else if (targetX < -1.0) {
 		turn = -(targetSpeed);
+	}
+	else if (targetX > 0.5) {
+		turn = fineTargetSpeed;
 	}
 	else if (targetX < -0.5) {
 		turn = -(fineTargetSpeed);

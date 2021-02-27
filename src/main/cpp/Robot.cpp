@@ -56,6 +56,15 @@ float joystickLinearScaledDeadband(const float value) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 class Robot : public frc::TimedRobot {
 
+  //---------------------ShooterPID Setup------------------------------------------------------
+  static const int shooterDeviceID = 60;
+  rev::CANSparkMax m_shooter{shooterDeviceID, rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANPIDController m_shooterPidController = m_shooter.GetPIDController();
+  rev::CANEncoder m_shooterEncoder = m_shooter.GetEncoder();
+  double shooter_kP = 6e-5, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
+  const double shooterMaxRPM = 5700;
+  //------------------------------------------------------------------------------------------
+
   WPI_TalonFX *m_leftMotor1a = new WPI_TalonFX(23);
   WPI_TalonFX *m_leftMotor2a = new WPI_TalonFX(22);
   WPI_TalonFX *m_rightMotor1a = new WPI_TalonFX(21);
@@ -134,7 +143,7 @@ class Robot : public frc::TimedRobot {
   TalonSRX m_intake = {9};
   TalonSRX m_slide = {10};
  // TalonSRX srx = {13};
-  rev::CANSparkMax m_shooter{60, rev::CANSparkMax::MotorType::kBrushless};
+  //rev::CANSparkMax m_shooter{60, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_lift{61, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANEncoder liftEncoder{m_lift};
   frc::AnalogInput ballSensor{0};
@@ -211,6 +220,16 @@ bool shootBallsShort=false;
  //   m_leftMotor2a->Follow(*m_leftMotor1a);
  //   m_rightMotor2a->Follow(*m_rightMotor1a);
 
+    //-----------------------ShooterPID setup-------------------------------------------------
+    m_shooter.RestoreFactoryDefaults();
+    m_shooterPidController.SetP(shooter_kP);
+    m_shooterPidController.SetI(shooter_kI);
+    m_shooterPidController.SetD(shooter_kD);
+    m_shooterPidController.SetIZone(shooter_kIz);
+    m_shooterPidController.SetFF(shooter_kFF);
+    m_shooterPidController.SetOutputRange(shooter_kMinOutput, shooter_kMaxOutput);
+    //----------------------------------------------------------------------------------------
+
     m_leftMotor1a->ConfigFactoryDefault();
     m_rightMotor1a->ConfigFactoryDefault();
     m_leftMotor2a->ConfigFactoryDefault();
@@ -278,6 +297,17 @@ bool shootBallsShort=false;
 ////////////////////////////TELEOP PERIODIC///////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
   void TeleopPeriodic() { 
+
+    //--------------------------ShooterPID------------------------------------------------
+    double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()
+    if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand) && true) {
+      shooter_SetPoint = 3500;
+    }
+    else {
+      shooter_SetPoint = 0;
+    }
+    m_shooterPidController.SetReference(shooter_SetPoint, rev::ControlType::kVelocity);
+    //------------------------------------------------------------------------------------
 
     turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
 
@@ -456,24 +486,20 @@ if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand)&& true) {
   }
   
 
-
+//advance lift
 if (copilot.GetXButton()) {
-    //shootBalls();
-    SBtimer.Reset();
-  	SBtimer.Start();
-    shootBallsShort=true;
+  m_lift.Set(-0.5);
 }
-
-if (copilot.GetYButtonPressed()) {
-  //shootBallsClose();
-    SBtimer.Reset();
-  	SBtimer.Start();
-    shootBallsLong=true;
-      //srx.Set(ControlMode::PercentOutput,-0.5);
+else if (copilot.GetXButtonReleased()) {
+  m_lift.Set(0.0);
 }
- //if (copilot.GetYButtonReleased()) {
-   // srx.Set(ControlMode::PercentOutput,0);
-  //}
+//reverse lift
+if (copilot.GetYButton()) {
+  m_lift.Set(0.5);
+}
+else if (copilot.GetYButtonReleased()) {
+  m_lift.Set(0.0);
+}
 
  climb1.Set(ControlMode::PercentOutput, copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand));
  climb2.Set(ControlMode::PercentOutput, copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand));

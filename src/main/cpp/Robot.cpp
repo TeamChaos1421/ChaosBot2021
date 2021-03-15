@@ -24,6 +24,7 @@
 #include "rev/ColorSensorV3.h"
 #include "rev/ColorMatch.h"
 
+
 #include "C:\Users\Drew Helgerson\Desktop\Code Saves\Color Sensor files\ControlPanel.h"
 #include "frc/smartdashboard/Smartdashboard.h"
 #include "networktables/NetworkTable.h"
@@ -32,6 +33,10 @@
 //setting slow and fast speeds
 double speedFast = .75;
 double speedSlow = .65;
+
+
+double smartDashboardTest = 0.0;
+bool init = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////DEADBAND FUNCTION/////////////////////////////////////////////////
@@ -297,6 +302,13 @@ bool shootBallsShort=false;
 ////////////////////////////TELEOP PERIODIC///////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
   void TeleopPeriodic() { 
+
+    if (init) {
+      frc::SmartDashboard::PutNumber("Test", smartDashboardTest);
+      init = false;
+    }
+    
+    frc::SmartDashboard::GetNumber("Test", smartDashboardTest);
 
     //--------------------------ShooterPID------------------------------------------------
     double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()

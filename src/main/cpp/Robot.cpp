@@ -30,8 +30,8 @@
 #include "networktables/NetworkTableInstance.h"
 
 //setting slow and fast speeds
-double speedFast = .7;
-double speedSlow = .45;
+double speedFast = .75;
+double speedSlow = .65;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////DEADBAND FUNCTION/////////////////////////////////////////////////
@@ -61,7 +61,7 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_shooter{shooterDeviceID, rev::CANSparkMax::MotorType::kBrushless};
   rev::CANPIDController m_shooterPidController = m_shooter.GetPIDController();
   rev::CANEncoder m_shooterEncoder = m_shooter.GetEncoder();
-  double shooter_kP = 6e-5, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
+  double shooter_kP = 5e-4, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
   const double shooterMaxRPM = 5700;
   //------------------------------------------------------------------------------------------
 
@@ -303,6 +303,12 @@ bool shootBallsShort=false;
     if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand) && true) {
       shooter_SetPoint = 3500;
     }
+    else if (copilot.GetBumper(frc::GenericHID::JoystickHand::kRightHand)) {
+      shooter_SetPoint = 3655;
+    }
+    else if (copilot.GetTriggerAxis(frc::GenericHID::JoystickHand::kRightHand) > .2) {
+      shooter_SetPoint = 4040;
+    }
     else {
       shooter_SetPoint = 0;
     }
@@ -461,7 +467,7 @@ if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand)&& true) {
 
 ///collect balls
   if (copilot.GetAButton()) {
-    m_intake.Set(ControlMode::PercentOutput, 0.5);
+    m_intake.Set(ControlMode::PercentOutput, 0.4);
     collectingBalls=true;
   }
   else{

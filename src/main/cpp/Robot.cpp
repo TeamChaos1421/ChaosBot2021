@@ -23,6 +23,8 @@
 #include <frc/util/color.h>
 #include "rev/ColorSensorV3.h"
 #include "rev/ColorMatch.h"
+#include <frc/Timer.h>
+#include "C:\Users\Drew Helgerson\Documents\Chaos2020 - Copy\src\main\cpp\kinematics.h"
 
 
 #include "C:\Users\Drew Helgerson\Desktop\Code Saves\Color Sensor files\ControlPanel.h"
@@ -37,6 +39,11 @@ double speedSlow = .65;
 
 double smartDashboardTest = 0.0;
 bool init = true;
+
+const int avgLength = 5000;
+
+frc::BuiltInAccelerometer accelerometer{};
+frc::Timer timer{};
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////DEADBAND FUNCTION/////////////////////////////////////////////////
@@ -60,6 +67,8 @@ float joystickLinearScaledDeadband(const float value) {
 ////////////////////////////CLASS DEFINITION /////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 class Robot : public frc::TimedRobot {
+
+double avg[avgLength];
 
   //---------------------ShooterPID Setup------------------------------------------------------
   static const int shooterDeviceID = 60;
@@ -217,6 +226,8 @@ bool shootBallsShort=false;
   double currentAngle;
   double startAngle;
 
+  
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////CONSTRUCTOR///////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +235,7 @@ bool shootBallsShort=false;
 
  //   m_leftMotor2a->Follow(*m_leftMotor1a);
  //   m_rightMotor2a->Follow(*m_rightMotor1a);
+
 
     //-----------------------ShooterPID setup-------------------------------------------------
     m_shooter.RestoreFactoryDefaults();
@@ -308,7 +320,7 @@ bool shootBallsShort=false;
       init = false;
     }
     
-    frc::SmartDashboard::GetNumber("Test", smartDashboardTest);
+    frc::SmartDashboard::PutNumber("Test", accelerometer.GetY());
 
     //--------------------------ShooterPID------------------------------------------------
     double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()
@@ -749,11 +761,48 @@ std::cout << "IN TARGET SEEK X IS " << speed << " " << angle << "\n";
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //AUTONOMOUS
 
-void AutonomousPeriodic(){
+double a[11] = {0,0,0,0,0,0,0,0,0,0,0};
+double duration = 2;
 
+void AutonomousPeriodic(){
+  
 //SBAtimer.Reset();
 if (beginAutonomous){
-  std::cout << "IN AUTONOMOUS PERIODICAAAAA \n";
+  timer.Reset();
+  timer.Start();
+  frc::SmartDashboard::GetNumber("duration: ", duration);
+  /**if (timer.Get() < duration) {
+    m_robotDrive->ArcadeDrive(0.5, 0.0);
+  }
+  else {
+    m_robotDrive->ArcadeDrive(0.0, 0.0);
+  }**/
+
+  for (int value = (avgLength - 1); value <= 0; value--) {
+      avg[(value + 1)] = avg[value];
+  }
+  avg[0] = (accelerometer.GetY() / 9.8);
+
+  double sum;
+  for (int value = 0; value <= (avgLength - 1); value++) {
+    sum = sum + avg[value];
+  }
+  
+ 
+  a[0] = sum / avgLength;
+  a[9] = timer.Get();
+
+  for (int i = 0; i <= 10; i++) {
+    wpi::outs() << a[i] << ", ";
+  }
+  wpi::outs() << "\n" << "\n";
+
+  kinematics(a);
+
+  frc::SmartDashboard::PutNumber("Y-Pos", a[7]);
+  frc::SmartDashboard::PutNumber("Test", accelerometer.GetY());
+
+  /** std::cout << "IN AUTONOMOUS PERIODICAAAAA \n";
  // srx.Set(ControlMode::PercentOutput,-0.5);
 //  m_leftMotor1a->SetSelectedSensorPosition(0);
 //      m_rightMotor1a->SetSelectedSensorPosition(0);
@@ -929,7 +978,7 @@ if (beginAutonomous){
 
       }
     }
-
+**/
 }
 }
 

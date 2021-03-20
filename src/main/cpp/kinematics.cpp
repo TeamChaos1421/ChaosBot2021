@@ -1,7 +1,7 @@
 //This file contains the formulas for kinematics using integration the Trapezoid Rule
 
 
-#include "C:\Users\Public\kinematics\kinematics.h"
+#include "kinematics.h"
 #include "math.h"
 #include <cmath>
 #include "frc/WPILib.h"

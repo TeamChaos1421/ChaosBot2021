@@ -5,7 +5,6 @@ double driveSpeed=speedFast;
 double turn;
 bool init = true;
 double smartDashboardTest = 0.0;
-const int avgLength = 5000;
 
 frc::BuiltInAccelerometer accelerometer{};
 frc::Timer timer{};

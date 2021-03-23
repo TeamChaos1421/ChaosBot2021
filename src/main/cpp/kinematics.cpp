@@ -40,15 +40,15 @@ double conv=3.1415927/180;
 
 
 //Calculate current robot velocity
-temp_velocity=.5 * (samp_time_cur-samp_time_pre) * (acc_cur+acc_pre)+vel_pre;
+temp_velocity= .5 * (samp_time_cur - samp_time_pre) * (acc_cur + acc_pre) + vel_pre;
 
 //Calculate current robot x position
 
-temp_x_position = xpos_pre + ((samp_time_cur-samp_time_pre)*vel_cur -.25*(samp_time_cur-samp_time_pre)*(samp_time_cur-samp_time_pre) * (acc_cur+acc_pre))*cos(angle*conv);
+temp_x_position = xpos_pre + ((samp_time_cur - samp_time_pre) * vel_cur - 0.25 * (samp_time_cur - samp_time_pre) * (samp_time_cur - samp_time_pre)  *  (acc_cur+acc_pre)) * cos(angle * conv);
 
  //Calculate current robot y position
 
-temp_y_position = ypos_pre + ((samp_time_cur-samp_time_pre)*vel_cur -.25*(samp_time_cur-samp_time_pre)*(samp_time_cur-samp_time_pre) * (acc_cur+acc_pre))*sin(angle*conv);
+temp_y_position = ypos_pre + ((samp_time_cur - samp_time_pre) * vel_cur - 0.25 * (samp_time_cur - samp_time_pre) * (samp_time_cur - samp_time_pre) * (acc_cur+acc_pre)) * sin(angle * conv);
 //std::cout << "[" << " " << a[0] << " "<< a[1]<< " " << a[2]<< " "<< a[3]<<"]"<<"\n";
 a[1]=a[0]; //current acceleration becomes previous acceleration for next iteration
 a[3]=a[2]; //current velocity becomes previous velocity for next iteration

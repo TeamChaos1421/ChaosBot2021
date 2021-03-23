@@ -12,16 +12,12 @@
 #include <frc/drive/DifferentialDrive.h>
 #include <frc/XboxController.h>
 #include <frc/SpeedControllerGroup.h>
-#include <iostream>
 #include <frc/Timer.h>
 #include <cmath>
-#include <frc/SpeedControllerGroup.h>
 #include <frc/util/color.h>
-#include <frc/Timer.h>
 #include "rev/CANSparkMax.h"
 #include "frc/WPILib.h"
 #include "frc/ADXRS450_Gyro.h"
-#include <frc/util/color.h>
 #include "cameraserver/CameraServer.h"
 #include "frc/smartdashboard/Smartdashboard.h"
 #include "networktables/NetworkTable.h"
@@ -30,8 +26,10 @@
 #include "kinematics.h"
 #include "Autonomous.h"
 
+#include "Testrun.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////CLASS DEFINITION ///////////////////////////////////////////////////
+//////////////////////////////////////CLASS DEFINITION /////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 class Robot : public frc::TimedRobot {
 
@@ -39,7 +37,7 @@ class Robot : public frc::TimedRobot {
   //////////////////////////////////////CONSTRUCTOR/////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////
 
-  public: Robot() {    
+  public: Robot() { //runs on robot boot
     //-----------------------ShooterPID setup-------------------------------------------------
     m_shooter.RestoreFactoryDefaults();
     m_shooterPidController.SetP(shooter_kP);
@@ -86,7 +84,6 @@ class Robot : public frc::TimedRobot {
     frc::CameraServer::GetInstance()->StartAutomaticCapture();
     cs::CvSink cvSink = frc::CameraServer::GetInstance()->GetVideo();
     cs::CvSource outputStream = frc::CameraServer::GetInstance()->PutVideo("Blur",640,480);
-    frc::SmartDashboard::PutNumber("Accelerometer", smartDashboardTest);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,15 +93,30 @@ class Robot : public frc::TimedRobot {
   //////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////
 
-  void TeleopPeriodic() { 
+  void TeleopInit() { //Runs when Teleop Starts
+    timer.Reset();
+    timer.Start();
+    wpi::outs() << "autoDriveSum, autoTurn, Timer\n";
+  }
 
-    //Prints Accelerometer to SmartDashboard
-    frc::SmartDashboard::PutNumber("Accelerometer", accelerometer.GetY());
+  void TeleopPeriodic() { //Loops During Teleop
+
+
+    wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
+
+    //Sends Motor Values to SmartDashboard to be logged as CSV
+    frc::SmartDashboard::PutNumber("Speed", driveSum);
+    frc::SmartDashboard::PutNumber("turn", turn);
+    frc::SmartDashboard::PutNumber("Timer", timer.Get());
+    //frc::SmartDashboard::PutNumber("Accelerometer", accelerometer.GetY());
 
     //Drivetrain Control
     turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
-    m_robotDrive->ArcadeDrive(-driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand)), turn);
+    driveSum = -driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    m_robotDrive->ArcadeDrive(driveSum, turn);
+    //Update Gamedata
     gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+    //Boost drivespeed
     if (driver.GetBumperPressed(frc::GenericHID::JoystickHand::kRightHand)) {
       driveSpeed = 1.0;
     }
@@ -112,6 +124,7 @@ class Robot : public frc::TimedRobot {
       driveSpeed = speedFast;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////COPILOT FUNCTIONS//////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +133,7 @@ class Robot : public frc::TimedRobot {
     //--------------------------ShooterPID------------------------------------------------
     double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()
     //ShortRange
-    if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand) && true) {
+    if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) {
       shooter_SetPoint = 3500;
     }
     //MediumRange
@@ -138,7 +151,7 @@ class Robot : public frc::TimedRobot {
     m_shooterPidController.SetReference(shooter_SetPoint, rev::ControlType::kVelocity);
     //------------------------------------------------------------------------------------
 
-    ///collect balls
+    //collect balls
     if (copilot.GetAButton()) {
       m_intake.Set(ControlMode::PercentOutput, 0.4);
       collectingBalls=true;
@@ -149,8 +162,8 @@ class Robot : public frc::TimedRobot {
     }
     if (collectingBalls && (ballSensor.GetVoltage()<1)){
       liftEncoder.SetPosition(0);
-      std::cout << "RESETTING TIMER \n";
-      std::cout << "sensor voltage is " << ballSensor.GetVoltage() << "\n";
+      //std::cout << "RESETTING TIMER \n";
+      //std::cout << "sensor voltage is " << ballSensor.GetVoltage() << "\n";
       LBtimer.Reset();
       LBtimer.Start();
       loadingBall=true;
@@ -194,10 +207,10 @@ class Robot : public frc::TimedRobot {
       lcounts = 0;
       rcounts = 0;
       mtime = 0;
-      movnum=0;
+      movnum= 0;
       movtmr.Reset();
       gyro.Reset();
-      bearing =0;      
+      bearing = 0;      
     }
     ////////////////////////////B BUTTON PRESSED///////////////////////////////////////////////////
     if (driver.GetBButtonPressed()) {
@@ -223,25 +236,33 @@ class Robot : public frc::TimedRobot {
        camServo->Set(0.75);
       }
     }
-    //////////////////LOADING BALL////////////////////////////
+    /////////////////////Left Trigger ////////////////////////
+    if (copilot.GetTriggerAxis(frc::GenericHID::JoystickHand::kLeftHand) > 0.2) {
+
+    }
+    /////////////////////Right Trigger ///////////////////////
+    if (copilot.GetTriggerAxis(frc::GenericHID::JoystickHand::kRightHand) > 0.2) {
+      
+    }
+    /////////////////////LOADING BALL/////////////////////////
     if (loadingBall){
-      std::cout << "IN LOAD BALL bool\n";
+      //std::cout << "IN LOAD BALL bool\n";
       collectingBalls=false;
 
       if (LBtimer.Get() < 0.5){
         m_feeder.Set(ControlMode::PercentOutput, -0.5);
-          std::cout << "IN LOAD BALL bool1111 " << LBtimer.Get() << "\n";
+          //std::cout << "IN LOAD BALL bool1111 " << LBtimer.Get() << "\n";
       }
       else {
         m_feeder.Set(ControlMode::PercentOutput, 0.0);
-        std::cout << "IN LOAD BALL bool2222\n";
+        //std::cout << "IN LOAD BALL bool2222\n";
       }
       if ((LBtimer.Get() > 0.5)&&(liftEncoder.GetPosition() > -11)){
-        std::cout << "IN LOAD BALL bool3333\n";
+        //std::cout << "IN LOAD BALL bool3333\n";
         m_lift.Set(-0.5);      
       }
       if ((LBtimer.Get() > 0.5)&&(liftEncoder.GetPosition() < -11)){
-        std::cout << "IN LOAD BALL bool4444\n";
+        //std::cout << "IN LOAD BALL bool4444\n";
         m_lift.Set(0.0);
         liftEncoder.SetPosition(0);
         loadingBall=false;
@@ -256,44 +277,15 @@ class Robot : public frc::TimedRobot {
   //////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////
 
-  void AutonomousPeriodic(){
-  
-    if (beginAutonomous){
-      timer.Reset();
-      timer.Start();
-      frc::SmartDashboard::GetNumber("duration: ", duration);
+  void AutonomousInit() { // Runs Once when Autonomous Starts
+    timer.Reset();
+    timer.Start();
+  }
 
-      /**if (timer.Get() < duration) {
-        m_robotDrive->ArcadeDrive(0.5, 0.0);
-      }
-      else {
-        m_robotDrive->ArcadeDrive(0.0, 0.0);
-      }**/
-
-      //Shift Array Values Up
-      for (int i = (avgLength - 1); i <= 0; i--) {
-          avg[(i + 1)] = avg[i];
-      }
-      avg[0] = (accelerometer.GetY() / 9.8);
-
-      //Add Values in Array
-      for (int i = 0; i <= (avgLength - 1); i++) {
-        sum = sum + avg[i];
-      }
-      
-      //Divide the Sum of the array by amt. of values to get avg
-      a[0] = sum / avgLength;
-      a[9] = timer.Get();
-
-      for (int i = 0; i <= 10; i++) {
-        wpi::outs() << a[i] << ", ";
-      }
-      wpi::outs() << "\n" << "\n";
-
-      kinematics(a);
-      
-      frc::SmartDashboard::PutNumber("Y-Pos", a[7]);
-      frc::SmartDashboard::PutNumber("Test", accelerometer.GetY());
+  void AutonomousPeriodic(){ //Loops During Autonomous
+    for (int i = 0; 0 <= 161; i++) {
+      m_robotDrive->ArcadeDrive(autoDriveSum[i], autoTurn[i]);
+      wpi::outs() << autoTimer[i];
     }
   }
 

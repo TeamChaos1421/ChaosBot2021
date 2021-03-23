@@ -1,14 +1,18 @@
-//setting slow and fast speeds
-double speedFast = .75;
-double speedSlow = .65;
-double driveSpeed=speedFast;
-double turn;
-bool init = true;
-double smartDashboardTest = 0.0;
 
+
+//////////////////////////////////////////Config Values//////////////////////////////////////////
+
+//setting slow and fast speeds
+const double speedFast = .75;
+const double speedSlow = .65;
+
+
+
+double turn;
+double driveSpeed = speedFast;
+double driveSum;
 frc::BuiltInAccelerometer accelerometer{};
 frc::Timer timer{};
-
 frc::Timer SBAtimer;
 bool shootBallsShort=false;
 int movnum = 0;
@@ -21,6 +25,7 @@ bool angleDone=false;
 frc::Timer LBtimer;
 
 //---------------------ShooterPID Setup------------------------------------------------------
+//Shooter Motor CAN value
 static const int shooterDeviceID = 60;
 rev::CANSparkMax m_shooter{shooterDeviceID, rev::CANSparkMax::MotorType::kBrushless};
 rev::CANPIDController m_shooterPidController = m_shooter.GetPIDController();
@@ -75,8 +80,6 @@ frc::Servo *camServo = new frc::Servo(0);
 double servoValue=0;  
 TalonSRX srx = {13};
   
-  
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////DEADBAND FUNCTION/////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////

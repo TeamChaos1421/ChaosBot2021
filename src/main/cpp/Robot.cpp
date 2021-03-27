@@ -25,7 +25,6 @@
 #include "Robot.h"
 #include "kinematics.h"
 #include "Autonomous.h"
-
 #include "Testrun.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,13 +95,10 @@ class Robot : public frc::TimedRobot {
   void TeleopInit() { //Runs when Teleop Starts
     timer.Reset();
     timer.Start();
-    wpi::outs() << "autoDriveSum, autoTurn, Timer\n";
+    wpi::outs() << "autoDriveSum,autoTurn,autoTimer\n";
   }
 
   void TeleopPeriodic() { //Loops During Teleop
-
-
-    wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
 
     //Sends Motor Values to SmartDashboard to be logged as CSV
     frc::SmartDashboard::PutNumber("Speed", driveSum);
@@ -110,17 +106,28 @@ class Robot : public frc::TimedRobot {
     frc::SmartDashboard::PutNumber("Timer", timer.Get());
     //frc::SmartDashboard::PutNumber("Accelerometer", accelerometer.GetY());
 
+    //rolling Avg of inputs
+    for (int i = (teleopAvgLength - 1); i >= 0; i--) {
+      teleopDriveAvg[i] = teleopDriveAvg[i - 1];
+    }
+    teleopDriveAvg[0] = joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    teleopDriveAvgSum = 0;
+    for (int i = 0; i <= teleopAvgLength; i++) {
+      teleopDriveAvgSum = teleopDriveAvgSum + teleopDriveAvg[i];
+    }
+
     //Drivetrain Control
     turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
-    driveSum = -driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    driveSum = -driveSpeed * (teleopDriveAvgSum / teleopAvgLength);
     m_robotDrive->ArcadeDrive(driveSum, turn);
+    wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
     //Update Gamedata
     gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
     //Boost drivespeed
-    if (driver.GetBumperPressed(frc::GenericHID::JoystickHand::kRightHand)) {
-      driveSpeed = 1.0;
+    if (driver.GetTriggerAxis(frc::GenericHID::JoystickHand::kRightHand) > 0.2) {
+      driveSpeed = 0.5;
     }
-    if (driver.GetBumperReleased(frc::GenericHID::JoystickHand::kRightHand)) {
+    else {
       driveSpeed = speedFast;
     }
 
@@ -192,7 +199,7 @@ class Robot : public frc::TimedRobot {
     m_slide.Set(ControlMode::PercentOutput, copilot.GetX(frc::GenericHID::JoystickHand::kRightHand));
     ////////////////////////////X BUTTON PRESSED///////////////////////////////////////////////////
     if (driver.GetXButtonPressed()) {
-      if (driveSpeed == 0.7) {
+      if (driveSpeed == speedFast) {
         driveSpeed = speedSlow;
       }
       else {
@@ -280,12 +287,19 @@ class Robot : public frc::TimedRobot {
   void AutonomousInit() { // Runs Once when Autonomous Starts
     timer.Reset();
     timer.Start();
+    i = 0;
   }
 
   void AutonomousPeriodic(){ //Loops During Autonomous
-    for (int i = 0; 0 <= 161; i++) {
-      m_robotDrive->ArcadeDrive(autoDriveSum[i], autoTurn[i]);
-      wpi::outs() << autoTimer[i];
+    //m_robotDrive->ArcadeDrive(autoDriveSum[i], autoTurn[i]);
+    if (i < (sizeof(autoDriveSum) / sizeof(autoDriveSum[0]))) {
+      wpi::outs() << autoDriveSum[i] << "," << autoTurn[i] << "," << autoTimer[i] << "," << timer.Get() << "\n";
+      m_robotDrive->ArcadeDrive(autoDriveSum[i],autoTurn[i]);      
+      i++;
+    }
+    else {
+      m_robotDrive->ArcadeDrive(0.0,0.0);
+      wpi::outs() << "0,0,0\n";
     }
   }
 

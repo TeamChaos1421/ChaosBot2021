@@ -6,8 +6,6 @@
 const double speedFast = .75;
 const double speedSlow = .65;
 
-
-
 double turn;
 double driveSpeed = speedFast;
 double driveSum;

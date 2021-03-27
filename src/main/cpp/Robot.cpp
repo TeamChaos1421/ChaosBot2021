@@ -6,6 +6,7 @@
 /*----------------------------------------------------------------------------*/
 
 #include <iostream>
+#include <fstream>
 #include "frc/PWMTalonFX.h"
 #include "ctre/Phoenix.h"
 #include <frc/TimedRobot.h>
@@ -25,12 +26,16 @@
 #include "Robot.h"
 #include "kinematics.h"
 #include "Autonomous.h"
-#include "Testrun.h"
+#include "Slolum.h"
+
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////CLASS DEFINITION /////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 class Robot : public frc::TimedRobot {
+
+  ofstream autoLog;
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////CONSTRUCTOR/////////////////////////////////////////////
@@ -94,7 +99,9 @@ class Robot : public frc::TimedRobot {
 
   void TeleopInit() { //Runs when Teleop Starts
     timer.Reset();
-    timer.Start();
+    timer.Start();    
+    autoLog.open ("/U/log.txt");
+    autoLog << "autoDriveSum,autoTurn,autoTimer\n";
     wpi::outs() << "autoDriveSum,autoTurn,autoTimer\n";
   }
 
@@ -109,18 +116,24 @@ class Robot : public frc::TimedRobot {
     //rolling Avg of inputs
     for (int i = (teleopAvgLength - 1); i >= 0; i--) {
       teleopDriveAvg[i] = teleopDriveAvg[i - 1];
+      teleopTurnAvg[i] = teleopTurnAvg[i - 1];
     }
     teleopDriveAvg[0] = joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    teleopTurnAvg[0] = joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand));
     teleopDriveAvgSum = 0;
+    teleopTurnAvgSum = 0;
     for (int i = 0; i <= teleopAvgLength; i++) {
       teleopDriveAvgSum = teleopDriveAvgSum + teleopDriveAvg[i];
+      teleopTurnAvgSum = teleopTurnAvgSum + teleopTurnAvg[i];
     }
 
     //Drivetrain Control
+    //wpi::outs() << "Turn: " << (teleopTurnAvgSum / teleopAvgLength) << "\n";
     turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
-    driveSum = -driveSpeed * (teleopDriveAvgSum / teleopAvgLength);
+    driveSum = -driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
     m_robotDrive->ArcadeDrive(driveSum, turn);
     wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
+    autoLog << driveSum << "," << turn << "," << timer.Get() << "\n";
     //Update Gamedata
     gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
     //Boost drivespeed

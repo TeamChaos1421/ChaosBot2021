@@ -113,34 +113,28 @@ class Robot : public frc::TimedRobot {
     frc::SmartDashboard::PutNumber("Timer", timer.Get());
     //frc::SmartDashboard::PutNumber("Accelerometer", accelerometer.GetY());
 
-    //rolling Avg of inputs
-    for (int i = (teleopAvgLength - 1); i >= 0; i--) {
-      teleopDriveAvg[i] = teleopDriveAvg[i - 1];
-      teleopTurnAvg[i] = teleopTurnAvg[i - 1];
-    }
-    teleopDriveAvg[0] = joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
-    teleopTurnAvg[0] = joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand));
-    teleopDriveAvgSum = 0;
-    teleopTurnAvgSum = 0;
-    for (int i = 0; i <= teleopAvgLength; i++) {
-      teleopDriveAvgSum = teleopDriveAvgSum + teleopDriveAvg[i];
-      teleopTurnAvgSum = teleopTurnAvgSum + teleopTurnAvg[i];
-    }
-
     //Drivetrain Control
     //wpi::outs() << "Turn: " << (teleopTurnAvgSum / teleopAvgLength) << "\n";
     turn = (driveSpeed * joystickLinearScaledDeadband(driver.GetX(frc::GenericHID::JoystickHand::kRightHand))) + speed;
-    driveSum = -driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    driveSum = (-driveSpeed * joystickLinearScaledDeadband(driver.GetY(frc::GenericHID::JoystickHand::kLeftHand)));
+    //m_robotDrive->ArcadeDrive(driveSum, turn);
     m_robotDrive->ArcadeDrive(driveSum, turn);
-    wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
+    //wpi::outs() << driveSum << "," << turn << "," << timer.Get() << "\n";
     autoLog << driveSum << "," << turn << "," << timer.Get() << "\n";
     //Update Gamedata
     gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
-    //Boost drivespeed
+    //Slow drivespeed
     if (driver.GetTriggerAxis(frc::GenericHID::JoystickHand::kRightHand) > 0.2) {
-      driveSpeed = 0.5;
+      driveSpeed = 0.55;
     }
     else {
+      driveSpeed = speedFast;
+    }
+    //drivespeed X Button toggle
+    if (driver.GetXButtonPressed() && (driveSpeed == speedFast)) {
+      driveSpeed = speedSlow;
+    }
+    else if (driver.GetXButtonPressed() && (driveSpeed == speedSlow)) {
       driveSpeed = speedFast;
     }
 
@@ -154,7 +148,7 @@ class Robot : public frc::TimedRobot {
     double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()
     //ShortRange
     if (copilot.GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) {
-      shooter_SetPoint = 3500;
+      shooter_SetPoint = 3510;
     }
     //MediumRange
     else if (copilot.GetBumper(frc::GenericHID::JoystickHand::kRightHand)) {

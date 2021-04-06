@@ -28,7 +28,7 @@ static const int shooterDeviceID = 60;
 rev::CANSparkMax m_shooter{shooterDeviceID, rev::CANSparkMax::MotorType::kBrushless};
 rev::CANPIDController m_shooterPidController = m_shooter.GetPIDController();
 rev::CANEncoder m_shooterEncoder = m_shooter.GetEncoder();
-double shooter_kP = 5e-4, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
+double shooter_kP = 1e-4, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
 const double shooterMaxRPM = 5700;
 //------------------------------------------------------------------------------------------
 

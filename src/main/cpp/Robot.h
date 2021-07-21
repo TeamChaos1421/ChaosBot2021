@@ -24,8 +24,11 @@ frc::Timer LBtimer;
 
 //---------------------ShooterPID Setup------------------------------------------------------
 //Shooter Motor CAN value
-static const int shooterDeviceID = 60;
-rev::CANSparkMax m_shooter{shooterDeviceID, rev::CANSparkMax::MotorType::kBrushless};
+static const int shooter1DeviceID = 60;
+//static const int shooter2DeviceID = 56;
+rev::CANSparkMax m_shooter{shooter1DeviceID, rev::CANSparkMax::MotorType::kBrushless};
+//rev::CANSparkMax m_shooter2{shooter2DeviceID, rev::CANSparkMax::MotorType::kBrushless};
+
 rev::CANPIDController m_shooterPidController = m_shooter.GetPIDController();
 rev::CANEncoder m_shooterEncoder = m_shooter.GetEncoder();
 double shooter_kP = 1e-4, shooter_kI = 1e-6, shooter_kD = 0, shooter_kIz = 0, shooter_kFF = 0.000015, shooter_kMaxOutput = 1.0, shooter_kMinOutput = -1.0;
@@ -83,7 +86,7 @@ TalonSRX srx = {13};
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 float joystickLinearScaledDeadband(const float value) {
-  const float deadbandCutoff = 0.08f;
+  const float deadbandCutoff = 0.1f;
 
   if (fabs(value) < deadbandCutoff)
   {

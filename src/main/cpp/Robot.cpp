@@ -144,6 +144,14 @@ class Robot : public frc::TimedRobot {
     ////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+    //testing 2nd shooter motor
+
+    if (copilot.GetTriggerAxis(frc::GenericHID::JoystickHand::kLeftHand)) {
+      //m_shooter2.Set(.5);
+    }
+
     //--------------------------ShooterPID------------------------------------------------
     double shooter_SetPoint = 0.0;// = MaxRPM*m_stick.GetY()
     //ShortRange
@@ -201,8 +209,8 @@ class Robot : public frc::TimedRobot {
       m_lift.Set(0.0);
     }
     //Climber Controls
-    climb1.Set(ControlMode::PercentOutput, copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand));
-    climb2.Set(ControlMode::PercentOutput, copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand));
+    climb1.Set(ControlMode::PercentOutput, (joystickLinearScaledDeadband(copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand)) + joystickLinearScaledDeadband(copilot.GetX(frc::GenericHID::JoystickHand::kLeftHand))));
+    climb2.Set(ControlMode::PercentOutput, (joystickLinearScaledDeadband(copilot.GetY(frc::GenericHID::JoystickHand::kLeftHand)) - joystickLinearScaledDeadband(copilot.GetX(frc::GenericHID::JoystickHand::kLeftHand))));
     m_slide.Set(ControlMode::PercentOutput, copilot.GetX(frc::GenericHID::JoystickHand::kRightHand));
     ////////////////////////////X BUTTON PRESSED///////////////////////////////////////////////////
     if (driver.GetXButtonPressed()) {
